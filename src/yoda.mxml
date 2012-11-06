@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx" minWidth="955" minHeight="600"
+			   creationComplete="loadSchema();">
+	
+	<fx:Declarations>
+		<mx:HTTPService id="httpService"
+					resultFormat="e4x" 
+					fault="httpService_fault(event);"
+					result="httpService_result(event)"/>
+
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.rpc.events.ResultEvent;
+			import mx.rpc.events.FaultEvent;
+			import mx.controls.Alert;
+			import mx.collections.XMLListCollection;  
+			import mx.collections.ArrayCollection;  
+			
+			private var alert:Alert;
+			private var xmlList:XMLList=new XMLList();  
+			private var xmlListColl:XMLListCollection=new XMLListCollection();
+			private var provider:ArrayCollection;  
+			
+			private function loadSchema():void {
+				httpService.url = "/yoda-debug/schema.xml";
+				httpService.send();
+			}
+			
+			private function httpService_fault(evt:FaultEvent):void {
+				var title:String = evt.type + " (" + evt.fault.faultCode + ")";
+				var text:String = evt.fault.faultString;
+				alert = Alert.show(text, title);
+			}
+			private function httpService_result(evt:ResultEvent):void {
+				var xmlList:XMLList = XML(evt.result).elements("column");
+				xmlListColl.source = xmlList;
+				provider=new ArrayCollection(xmlListColl.toArray());  
+				grid.dataProvider=provider;  
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<mx:DataGrid x="221"  
+				 y="65"  
+				 width="742"  
+				 height="294"  
+				 id="grid">  
+		<mx:columns>  
+			<mx:DataGridColumn headerText="title"  
+							   dataField="title"/>  
+			<mx:DataGridColumn headerText="type"  
+							   dataField="type"/>  
+		</mx:columns>  
+		
+	</mx:DataGrid>  
+</s:Application>
