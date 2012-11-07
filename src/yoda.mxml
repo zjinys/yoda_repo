@@ -54,8 +54,27 @@
 				grid.columns = columns;
 			}
 			private function upload_file():void{
-				Alert.show("Upload");
+				var request:URLRequest = new URLRequest("/yoda-debug/test.xls");
+				var urlLoader:URLLoader = new URLLoader(request);
+				urlLoader.addEventListener(Event.COMPLETE, onUploadExcelFileComplete);
+				urlLoader.dataFormat = URLLoaderDataFormat.BINARY;
+				urlLoader.load(request);
 			}
+			
+			private function onUploadExcelFileComplete(event:Event):void
+			{
+				Alert.show("Hello World Start Show.");
+				var loadedFile:ByteArray = event.target.data;
+				
+				var excelFile:ExcelFile = new ExcelFile();
+				Alert.show("Hello World Start Show 1.");
+				excelFile.loadFromByteArray(loadedFile);
+				Alert.show("Hello World Start Show 2.");
+				var sheet:Sheet = excelFile.sheets[0];
+				Alert.show(sheet.getCell(1,0).value) 
+				grid.dataProvider=sheet.values; 
+			}
+
 		]]>
 	</fx:Script>
 	<s:VGroup left="10" top="5" color="0x000000" horizontalAlign="center"> 
