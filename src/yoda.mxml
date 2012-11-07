@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
-			   xmlns:s="library://ns.adobe.com/flex/spark" 
-			   xmlns:mx="library://ns.adobe.com/flex/mx" minWidth="955" minHeight="600"
-			   creationComplete="loadSchema();">
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   minWidth="955" minHeight="600" creationComplete="loadSchema();">
 	
 	<fx:Declarations>
-		<mx:HTTPService id="httpService"
-					resultFormat="e4x" 
-					fault="httpService_fault(event);"
-					result="httpService_result(event)"/>
+		<mx:HTTPService id="httpService" fault="httpService_fault(event);"
+						result="httpService_result(event)" resultFormat="e4x"/>
 
 	</fx:Declarations>
 	
 	<fx:Script>
 		<![CDATA[
-			import mx.rpc.events.ResultEvent;
-			import mx.rpc.events.FaultEvent;
+			import mx.collections.ArrayCollection;
+			import mx.collections.XMLListCollection;
 			import mx.controls.Alert;
-			import mx.collections.XMLListCollection;  
-			import mx.collections.ArrayCollection;  
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;  
+			import com.as3xls.xls.Sheet;
+			import com.as3xls.xls.ExcelFile;
 			
 			private var alert:Alert;
 			private var xmlList:XMLList=new XMLList();  
@@ -37,25 +37,40 @@
 			}
 			private function httpService_result(evt:ResultEvent):void {
 				var xmlList:XMLList = XML(evt.result).elements("column");
-				xmlListColl.source = xmlList;
-				provider=new ArrayCollection(xmlListColl.toArray());  
-				grid.dataProvider=provider;  
+				//xmlListColl.source = xmlList;
+				//provider=new ArrayCollection(xmlListColl.toArray());  
+				//grid.dataProvider=provider;  
+				
+				create_grid(xmlList);
 			}
 			
+			private function create_grid(xmlList:XMLList):void{
+				var columns:Array = [];
+				for each(var column:XML in xmlList){
+					var myDataGridColumn:DataGridColumn = new DataGridColumn( column.@index );
+					myDataGridColumn.headerText = column.@title;
+					columns.push( myDataGridColumn );
+				}
+				grid.columns = columns;
+			}
+			private function upload_file():void{
+				Alert.show("Upload");
+			}
 		]]>
 	</fx:Script>
+	<s:VGroup left="10" top="5" color="0x000000" horizontalAlign="center"> 
+		
 	
-	<mx:DataGrid x="221"  
-				 y="65"  
-				 width="742"  
-				 height="294"  
-				 id="grid">  
+	<s:HGroup>
+		<s:Button label="上传" click="upload_file();" />
+		<s:Button label="上一个错误"/>
+		<s:Button label="下一个错误"/>
+	</s:HGroup>
+	<mx:DataGrid id="grid" x="221" y="65" width="742" height="294">  
 		<mx:columns>  
-			<mx:DataGridColumn headerText="title"  
-							   dataField="title"/>  
-			<mx:DataGridColumn headerText="type"  
-							   dataField="type"/>  
+			<mx:DataGridColumn dataField="title" headerText="title"/>  
 		</mx:columns>  
 		
 	</mx:DataGrid>  
+		</s:VGroup>
 </s:Application>

@@ -1,18 +1,6 @@
 <columns>
-	<column>
-		<title>1</title>
-		<type>int</type>
-	</column>
-	<column>
-		<title>1</title>
-		<type>int</type>
-	</column>
-	<column>
-		<title>1</title>
-		<type>int</type>
-	</column>
-	<column>
-		<title>1</title>
-		<type>int</type>
-	</column>
+	<column title="列1" index="0" type="int" />
+	<column title="列2" index="1" type="int" />
+	<column title="列3" index="2" type="int" />
+	<column title="列4" index="3" type="int" />
 </columns>
