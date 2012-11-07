@@ -3,31 +3,39 @@
 			   xmlns:s="library://ns.adobe.com/flex/spark"
 			   xmlns:mx="library://ns.adobe.com/flex/mx"
 			   minWidth="955" minHeight="600" creationComplete="loadSchema();">
-	
+	<fx:Metadata>
+		[Event(name="data_error_found",type="DataErrorEvent")]
+	</fx:Metadata>
 	<fx:Declarations>
 		<mx:HTTPService id="httpService" fault="httpService_fault(event);"
 						result="httpService_result(event)" resultFormat="e4x"/>
-
 	</fx:Declarations>
-	
+	   
+
 	<fx:Script>
 		<![CDATA[
+			import com.as3xls.xls.ExcelFile;
+			import com.as3xls.xls.Sheet;
+			
 			import mx.collections.ArrayCollection;
+			import mx.collections.IViewCursor;
 			import mx.collections.XMLListCollection;
 			import mx.controls.Alert;
+			import mx.controls.DataGrid;
 			import mx.rpc.events.FaultEvent;
-			import mx.rpc.events.ResultEvent;  
-			import com.as3xls.xls.Sheet;
-			import com.as3xls.xls.ExcelFile;
+			import mx.rpc.events.ResultEvent;
 			
 			private var alert:Alert;
-			private var xmlList:XMLList=new XMLList();  
-			private var xmlListColl:XMLListCollection=new XMLListCollection();
+			private var schema:XMLList ; 
 			private var provider:ArrayCollection;  
+			
+
 			
 			private function loadSchema():void {
 				httpService.url = "/yoda-debug/schema.xml";
 				httpService.send();
+				
+				grid.addEventListener("data_error_found",show_error_info);
 			}
 			
 			private function httpService_fault(evt:FaultEvent):void {
@@ -36,22 +44,27 @@
 				alert = Alert.show(text, title);
 			}
 			private function httpService_result(evt:ResultEvent):void {
-				var xmlList:XMLList = XML(evt.result).elements("column");
-				//xmlListColl.source = xmlList;
-				//provider=new ArrayCollection(xmlListColl.toArray());  
-				//grid.dataProvider=provider;  
+				schema = XML(evt.result).elements("column");
 				
-				create_grid(xmlList);
+				create_grid();
 			}
 			
-			private function create_grid(xmlList:XMLList):void{
-				var columns:Array = [];
-				for each(var column:XML in xmlList){
+			private function create_grid():void{
+				var columns:Array  = [];
+				for each(var column:XML in schema){
 					var myDataGridColumn:DataGridColumn = new DataGridColumn( column.@index );
 					myDataGridColumn.headerText = column.@title;
+					myDataGridColumn.itemRenderer = new ClassFactory(ItemRenderer);
 					columns.push( myDataGridColumn );
 				}
 				grid.columns = columns;
+			}
+			private function show_error_info(event:DataErrorEvent):void{
+				var errorInfo:ErrorInfo = event.errorInfo;
+				trace(errorInfo.row + " => " + errorInfo.col + " => " + errorInfo.msg);
+			}
+			private function update_style():void{
+				
 			}
 			private function upload_file():void{
 				var request:URLRequest = new URLRequest("/yoda-debug/test.xls");
@@ -63,18 +76,38 @@
 			
 			private function onUploadExcelFileComplete(event:Event):void
 			{
-				Alert.show("Hello World Start Show.");
 				var loadedFile:ByteArray = event.target.data;
-				
 				var excelFile:ExcelFile = new ExcelFile();
-				Alert.show("Hello World Start Show 1.");
 				excelFile.loadFromByteArray(loadedFile);
-				Alert.show("Hello World Start Show 2.");
 				var sheet:Sheet = excelFile.sheets[0];
-				Alert.show(sheet.getCell(1,0).value) 
+				
 				grid.dataProvider=sheet.values; 
 			}
 
+			private function validate():void{
+				var dp:Object = grid.dataProvider;
+				var cursor:IViewCursor = dp.createCursor();
+				
+				while(!cursor.afterLast){
+					for each(var column:XML in schema){
+						var value:Object = cursor.current[column.@index];
+						var type:String = column.@type;
+						if (!Validator.validate(value,type)){
+							trace('Error found: ' + value + " => " + type);
+							var errorInfo:ErrorInfo = new ErrorInfo();
+							errorInfo.row = 1;
+							errorInfo.col = 2;
+							errorInfo.msg = "Hello World";
+							var evt:DataErrorEvent = new DataErrorEvent("data_error_found",errorInfo);
+							grid.dispatchEvent(evt);
+						}
+					}
+					cursor.moveNext();
+				}
+			}
+			private function show_pre_error():void{
+				
+			}
 		]]>
 	</fx:Script>
 	<s:VGroup left="10" top="5" color="0x000000" horizontalAlign="center"> 
@@ -82,14 +115,19 @@
 	
 	<s:HGroup>
 		<s:Button label="上传" click="upload_file();" />
-		<s:Button label="上一个错误"/>
+		<s:Button label="检查" click="validate();" />
+		<s:Button label="上一个错误" click="show_pre_error();"/>
 		<s:Button label="下一个错误"/>
 	</s:HGroup>
 	<mx:DataGrid id="grid" x="221" y="65" width="742" height="294">  
 		<mx:columns>  
-			<mx:DataGridColumn dataField="title" headerText="title"/>  
+			
+				<mx:DataGridColumn dataField="Artist"/> 
+				<mx:DataGridColumn dataField="Album"/> 
+			
 		</mx:columns>  
 		
-	</mx:DataGrid>  
+	</mx:DataGrid>
+		
 		</s:VGroup>
 </s:Application>
